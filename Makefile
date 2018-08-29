@@ -14,5 +14,5 @@ all:
 clean:
 	rm -rf $(PROG)
 
-deploy:
+deploy: all
 	scp $(PROG) root@$(IP_ADDR):/root/
