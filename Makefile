@@ -4,7 +4,7 @@ IP_ADDR := 10.10.0.40
 COMPILER := arm-buildroot-linux-uclibcgnueabihf-gcc-7.3.0
 
 # Project specific
-PROG := example
+PROG := event_sender
 LIB_LIST := libevdev
 CFLAGS := -Wall -g
 
