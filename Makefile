@@ -6,10 +6,11 @@ COMPILER := arm-buildroot-linux-uclibcgnueabihf-gcc-7.3.0
 # Project specific
 PROG := example
 LIB_LIST := libevdev
+CFLAGS := -Wall -g
 
 
 all:
-	$(BIN_DIR)/$(COMPILER) $(PROG).c -o $(PROG) `$(BIN_DIR)/pkg-config --cflags --libs $(LIB_LIST)`
+	$(BIN_DIR)/$(COMPILER) $(PROG).c $(CFLAGS) -o $(PROG) `$(BIN_DIR)/pkg-config --cflags --libs $(LIB_LIST)`
 
 clean:
 	rm -rf $(PROG)
