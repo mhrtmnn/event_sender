@@ -36,7 +36,8 @@ void intHandler(int dummy) {
 int main()
 {
 	int fd, rc, event_complete;
-	struct libevdev *dev = NULL;
+	int x_max, y_max;
+	struct libevdev *evdev = NULL;
 
 	// signalling for interrupting main loop
 	signal(SIGINT, intHandler);
@@ -49,22 +50,30 @@ int main()
 
 	// init libevdev
 	fd = open("/dev/input/event0", O_RDONLY|O_NONBLOCK);
-	rc = libevdev_new_from_fd(fd, &dev);
+	rc = libevdev_new_from_fd(fd, &evdev);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
 		exit(1);
 	}
 
 	// display the input device
-	printf("Input device name: \"%s\"\n", libevdev_get_name(dev));
+	printf("Input device name: \"%s\"\n", libevdev_get_name(evdev));
 	printf("Input device ID: bus %#x vendor %#x product %#x\n",
-		libevdev_get_id_bustype(dev),
-		libevdev_get_id_vendor(dev),
-		libevdev_get_id_product(dev));
+		libevdev_get_id_bustype(evdev),
+		libevdev_get_id_vendor(evdev),
+		libevdev_get_id_product(evdev));
 
 	// check the input device
-	if (strcmp(libevdev_get_name(dev), "Wii Nunchuk")) {
-		printf("This is not the device you are looking for ...\n");
+	if (strcmp(libevdev_get_name(evdev), "Wii Nunchuk")) {
+		fprintf(stderr, "This is not the device you are looking for ...\n");
+		exit(1);
+	}
+
+	// get parameters
+	x_max = libevdev_get_abs_maximum(evdev, ABS_X);
+	y_max = libevdev_get_abs_maximum(evdev, ABS_Y);
+	if (!x_max || !y_max) {
+		fprintf(stderr, "Error getting abs max values\n");
 		exit(1);
 	}
 
@@ -85,7 +94,7 @@ int main()
 			 *
 			 * Event groups are separated by an event of type EV_SYN and code SYN_REPORT.
 			 */
-			rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
+			rc = libevdev_next_event(evdev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 			switch (rc) {
 				case LIBEVDEV_READ_STATUS_SUCCESS:
 					s_ev_type = libevdev_event_type_get_name(ev.type);
@@ -102,7 +111,7 @@ int main()
 					event_complete = 0;
 					continue;
 				default:
-					fprintf(stderr, "Error!\n");
+					fprintf(stderr, "Error in libevdev_next_event()!\n");
 					event_complete = 1;
 					continue;
 			}
@@ -120,6 +129,6 @@ int main()
 
 	// cleanup
 	printf("Graceful exit.\n");
-	libevdev_free(dev);
+	libevdev_free(evdev);
 	close(fd);
 }
