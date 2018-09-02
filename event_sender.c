@@ -43,6 +43,52 @@ int main()
 	int fd, rc, x_max, y_max;
 	struct libevdev *evdev = NULL;
 
+	//protobuf variables
+	unsigned len;					// Length of serialized data
+	uint8_t *buf;					// Buffer to store serialized data in
+	NunchukUpdate nun_update;		// Main msg
+	NunchukUpdate__ButInfo nun_but;	// Nested msg 1
+	NunchukUpdate__JoyInfo nun_joy;	// Nested msg 2
+
+	// init message
+	nunchuk_update__init(&nun_update);
+	nunchuk_update__but_info__init(&nun_but);
+	nunchuk_update__joy_info__init(&nun_joy);
+	nun_update.buttons = &nun_but;
+	nun_update.joystick = &nun_joy;
+
+	// test fill
+	nun_update.query = "HelloWorld!";
+	nun_update.buttons->but_c = NUNCHUK_UPDATE__BUT_INFO__BUT_STATES__KEEP;
+	nun_update.buttons->but_z = NUNCHUK_UPDATE__BUT_INFO__BUT_STATES__DOWN;
+	nun_update.joystick->joy_x = 123;
+	nun_update.joystick->joy_y = -66;
+
+	// allocate buffer for serializing the protobuf
+	len = nunchuk_update__get_packed_size(&nun_update);
+	buf = malloc(len);
+	if (!buf) {
+		fprintf(stderr, "Failed allocate memory\n");
+		exit(1);
+	}
+
+	// serialize the protobuf
+	rc = nunchuk_update__pack(&nun_update, buf);
+	if (rc != len) {
+		fprintf(stderr, "Failed to pack protobuf\n");
+		exit(1);
+	}
+
+	// de-serialize the buffer again, protobuf is allocated by unpack func
+	NunchukUpdate *new_msg = nunchuk_update__unpack(NULL, len, buf);
+	if (!new_msg) {
+		fprintf(stderr, "Failed to unpack protobuf\n");
+		exit(1);
+	}
+
+	// free the allocated protobuf
+	nunchuk_update__free_unpacked(new_msg, NULL);
+
 	// signalling for interrupting main loop
 	signal(SIGINT, intHandler);
 
