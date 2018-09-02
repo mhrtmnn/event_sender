@@ -33,10 +33,41 @@ void intHandler(int dummy) {
 /***********************************************************************************************************************
 * HELPER FUNC
 ***********************************************************************************************************************/
+void print_nun_stat(nun_stat_t *nun_stat)
+{
+	printf(">>> Buttons:  But-C=%d, But-Z=%d\n", nun_stat->but_c, nun_stat->but_z);
+	printf(">>> Joystick: Joy-X=%d, Joy-Y=%d\n", nun_stat->joy_x, nun_stat->joy_y);
+}
+
+int unpack_buffer(uint8_t *buffer, unsigned length)
+{
+	nun_stat_t nun_stat;
+
+	int err = unpack_nunchuk_protobuf(buffer, length, &nun_stat);
+	if (err) {
+		printf("Error unpacking protobuf!");
+		return err;
+	}
+
+	print_nun_stat(&nun_stat);
+
+	return 0;
+}
+
 int send_update(NunchukUpdate *nun_protobuf)
 {
-		uint8_t *buf = pack_nunchuk_protobuf(nun_protobuf);
+		int err;
+		unsigned length;
+		uint8_t *buffer;
+
+		err = pack_nunchuk_protobuf(nun_protobuf, &buffer, &length);
+		if (err)
+			return -EINVAL;
+
 		// udp send buf
+		// TODO
+
+		/* debug */ unpack_buffer(buffer, length);
 
 		return 0;
 }
