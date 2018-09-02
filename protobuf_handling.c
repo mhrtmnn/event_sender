@@ -6,8 +6,14 @@
 #include "event_sender.h"
 #include "protobuf_handling.h"
 
-// global buffer used to unpack data
-uint8_t *g_proto_pack_buff;
+// global buffer used to pack protobuf into
+uint8_t g_proto_pack_buff[MAX_UNPACK_BUF_SIZE];
+
+	//TODO: new_nunchuk_protobuf can only be called once, i.e.
+	// there can only be one active protobuf at once.
+	// Also concurrent unpacks will suffer from synchronization issues.
+	// Maybe make unpack buffers associated to a given protobuf.
+
 
 NunchukUpdate *new_nunchuk_protobuf(void)
 {
@@ -37,18 +43,6 @@ NunchukUpdate *new_nunchuk_protobuf(void)
 	// connect inner to outer messages
 	nun_update->buttons = nun_but;
 	nun_update->joystick = nun_joy;
-
-	// allocate pack-buffer
-	g_proto_pack_buff = malloc(nunchuk_update__get_packed_size(nun_update));
-	if (!g_proto_pack_buff) {
-		fprintf(stderr, "Failed allocate memory\n");
-		return NULL;
-	}
-
-	//TODO: new_nunchuk_protobuf can only be called once, i.e.
-	// there can only be one active protobuf at once.
-	// Also concurrent unpacks will suffer from synchronization issues.
-	// Maybe make unpack buffers associated to a given protobuf.
 
 	return nun_update;
 }
@@ -113,15 +107,15 @@ void fill_stats_from_nunchuk_protobuf(NunchukUpdate *msg, nun_stat_t *stat)
  *
  * return: 0 on success, <0 on error
  */
-static int __pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t *buf)
+static int __pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t *buf, unsigned buf_len)
 {
 	int rc;
 	unsigned len; // Length of serialized data
 
 	// check length of provided buffer before serializing the protobuf
 	len = nunchuk_update__get_packed_size(msg);
-	if (sizeof(buf) != len) {
-		fprintf(stderr, "Buffer has wrong length (should be %d)!\n", len);
+	if (buf_len != len) {
+		fprintf(stderr, "Buffer has wrong length (is %d, should be %d)!\n", buf_len, len);
 		return -EINVAL;
 	}
 
@@ -139,21 +133,23 @@ static int __pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t *buf)
  * wrapper for __pack_nunchuk_protobuf, uses a global unpack buffer that is returned.
  * By this, the user does not need to determine the size of the buffer and preallocate it himself.
  */
-uint8_t *pack_nunchuk_protobuf(NunchukUpdate *msg)
+int pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t **buf, unsigned *buflen)
 {
-	int err;
+	int len = nunchuk_update__get_packed_size(msg);
 
-	err = __pack_nunchuk_protobuf(msg, g_proto_pack_buff);
-	if (err)
-		return NULL;
+	// return buffer and its current length via argument ptrs
+	*buflen = len;
+	*buf = g_proto_pack_buff;
 
-	return g_proto_pack_buff;
+	printf("Packing probuf, size %d\n", len);
+
+	return __pack_nunchuk_protobuf(msg, g_proto_pack_buff, len);
 }
 
 int unpack_nunchuk_protobuf(uint8_t *buf, unsigned len, nun_stat_t *stat)
 {
 	// de-serialize the buffer again, protobuf is allocated by unpack func
-	NunchukUpdate *new_msg = nunchuk_update__unpack(NULL, len, buf);
+	NunchukUpdate *new_msg = nunchuk_update__unpack(NULL, len, buf); // use default allocator
 	if (!new_msg) {
 		fprintf(stderr, "Failed to unpack protobuf\n");
 		return -EINVAL;
@@ -163,7 +159,7 @@ int unpack_nunchuk_protobuf(uint8_t *buf, unsigned len, nun_stat_t *stat)
 	fill_stats_from_nunchuk_protobuf(new_msg, stat);
 
 	// free the allocated protobuf
-	nunchuk_update__free_unpacked(new_msg, NULL);
+	nunchuk_update__free_unpacked(new_msg, NULL); // use default allocator
 
 	return 0;
 }

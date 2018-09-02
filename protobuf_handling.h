@@ -8,6 +8,7 @@
 * MACROS
 *******************************************************************************/
 #define MAX_STR_LEN 512
+#define MAX_UNPACK_BUF_SIZE 128
 
 
 /*******************************************************************************
@@ -29,11 +30,13 @@ NunchukUpdate *new_nunchuk_protobuf(void);
 void free_nunchuk_protobuf(NunchukUpdate *);
 
 /**
- * Pack a given nunchuk_update protobuf into a buffer and return that buffer.
+ * Pack a given nunchuk_update protobuf into a buffer.
+ * The function takes a pointer to a buffer and pointer to the buffer length as parameters,
+ * they are set to the resulting buffer and its length respectively.
  *
- * return: Buffer containing the unpacked protobuf, NULL on error
+ * return: 0 on success, <0 on error
  */
-uint8_t *pack_nunchuk_protobuf(NunchukUpdate *);
+int pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t **buf, unsigned *buflen);
 
 /**
  * Unpack a given nunchuk_update protobuf into a pre-allocated nun_stat_t structure
