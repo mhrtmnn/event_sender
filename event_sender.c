@@ -8,6 +8,7 @@
 
 #include "event_sender.h"
 #include "protobuf_handling.h"
+#include "network_handling.h"
 
 /**
  * Compiler from buildroot toolchain automatically searches in the target's sysroot for headers and libs.
@@ -61,15 +62,15 @@ int send_update(NunchukUpdate *nun_protobuf)
 		uint8_t *buffer;
 
 		err = pack_nunchuk_protobuf(nun_protobuf, &buffer, &length);
-		if (err)
-			return -EINVAL;
-
-		// udp send buf
-		// TODO
+		if (err) {
+			fprintf(stderr, "Failed to pack protobuf (%s)\n", strerror(-err));
+			return err;
+		}
 
 		/* debug */ unpack_buffer(buffer, length);
 
-		return 0;
+		// send out buf
+		return nw_send(buffer, length);
 }
 
 
