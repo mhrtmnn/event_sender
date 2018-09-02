@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -22,14 +23,14 @@
 /***********************************************************************************************************************
 * GLOBAL DATA
 ***********************************************************************************************************************/
-static volatile int keep_running = 1;
+static volatile bool keep_running = true;
 
 
 /***********************************************************************************************************************
 * HANDLERS
 ***********************************************************************************************************************/
 void intHandler(int dummy) {
-	keep_running = 0;
+	keep_running = false;
 }
 
 
@@ -38,8 +39,8 @@ void intHandler(int dummy) {
 ***********************************************************************************************************************/
 int main()
 {
-	int fd, rc, event_complete;
-	int x_max, y_max;
+	bool event_complete;
+	int fd, rc, x_max, y_max;
 	struct libevdev *evdev = NULL;
 
 	// signalling for interrupting main loop
@@ -103,19 +104,19 @@ int main()
 					s_ev_type = libevdev_event_type_get_name(ev.type);
 					s_ev_code = libevdev_event_code_get_name(ev.type, ev.code);
 					printf("Event: %s %s %d\n", s_ev_type, s_ev_code, ev.value);
-					event_complete = (ev.code == SYN_REPORT) ? 1 : 0;
+					event_complete = (ev.code == SYN_REPORT) ? true : false;
 					break;
 				case LIBEVDEV_READ_STATUS_SYNC:
 					fprintf(stderr, "Dropped an event, resync required!\n");
-					event_complete = 1;
+					event_complete = true;
 					continue;
 				case -EAGAIN:
 					/* default case: do nothing */
-					event_complete = 0;
+					event_complete = false;
 					continue;
 				default:
 					fprintf(stderr, "Error in libevdev_next_event()!\n");
-					event_complete = 1;
+					event_complete = true;
 					continue;
 			}
 
