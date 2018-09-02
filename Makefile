@@ -5,15 +5,20 @@ COMPILER := arm-buildroot-linux-uclibcgnueabihf-gcc-7.3.0
 
 # Project specific
 PROG := event_sender
-LIB_LIST := libevdev
+PROTO_NAME := nunchuk_update
+LIB_LIST := libevdev libprotobuf-c
 CFLAGS := -Wall -g
 
 
-all:
-	$(BIN_DIR)/$(COMPILER) $(PROG).c $(CFLAGS) -o $(PROG) `$(BIN_DIR)/pkg-config --cflags --libs $(LIB_LIST)`
+all: proto
+	$(BIN_DIR)/$(COMPILER) $(PROG).c $(PROTO_NAME).pb-c.c $(CFLAGS) -o $(PROG) `$(BIN_DIR)/pkg-config --cflags --libs $(LIB_LIST)`
+
+proto:
+	# The --c_out flag instructs the protoc compiler to use the protobuf-c plugin (https://github.com/protobuf-c/protobuf-c)
+	$(BIN_DIR)/protoc --c_out=. $(PROTO_NAME).proto
 
 clean:
-	rm -rf $(PROG)
+	rm -rf $(PROG) $(PROTO_NAME).pb-c.c $(PROTO_NAME).pb-c.h
 
 deploy: all
 	scp $(PROG) root@$(IP_ADDR):/root/
