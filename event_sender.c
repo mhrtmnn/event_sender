@@ -51,7 +51,6 @@ int main()
 	int fd, rc, x_max, y_max;
 	struct libevdev *evdev = NULL;
 	NunchukUpdate *nun_protobuf;
-	nun_stat_t nun_status;
 
 	// init the protobuf used to send nunchuk data
 	nun_protobuf = new_nunchuk_protobuf();
@@ -104,10 +103,7 @@ int main()
 		printf("--------------- EVENT ---------------\n");
 
 		// init status struct
-		nun_status.joy_x = NO_CHANGE;
-		nun_status.joy_y = NO_CHANGE;
-		nun_status.but_c = NO_CHANGE;
-		nun_status.but_z = NO_CHANGE;
+		nun_stat_t nun_status = {NO_CHANGE, NO_CHANGE, NO_CHANGE, NO_CHANGE};
 
 		do {
 			struct input_event ev;
