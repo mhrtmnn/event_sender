@@ -55,6 +55,10 @@ int main()
 
 	// init the protobuf used to send nunchuk data
 	nun_protobuf = new_nunchuk_protobuf();
+	if (!nun_protobuf) {
+		fprintf(stderr, "Error allocating protobuf!\n");
+		exit(EXIT_FAILURE);
+	}
 
 	// signalling for interrupting main loop
 	signal(SIGINT, intHandler);
