@@ -69,21 +69,21 @@ int main()
 	buf = malloc(len);
 	if (!buf) {
 		fprintf(stderr, "Failed allocate memory\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// serialize the protobuf
 	rc = nunchuk_update__pack(&nun_update, buf);
 	if (rc != len) {
 		fprintf(stderr, "Failed to pack protobuf\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// de-serialize the buffer again, protobuf is allocated by unpack func
 	NunchukUpdate *new_msg = nunchuk_update__unpack(NULL, len, buf);
 	if (!new_msg) {
 		fprintf(stderr, "Failed to unpack protobuf\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// free the allocated protobuf
@@ -103,7 +103,7 @@ int main()
 	rc = libevdev_new_from_fd(fd, &evdev);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to init libevdev (%s)\n", strerror(-rc));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// display the input device
@@ -116,7 +116,7 @@ int main()
 	// check the input device
 	if (strcmp(libevdev_get_name(evdev), "Wii Nunchuk")) {
 		fprintf(stderr, "This is not the device you are looking for ...\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// get parameters
@@ -124,7 +124,7 @@ int main()
 	y_max = libevdev_get_abs_maximum(evdev, ABS_Y);
 	if (!x_max || !y_max) {
 		fprintf(stderr, "Error getting abs max values\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	// main loop
