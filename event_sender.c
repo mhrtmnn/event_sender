@@ -107,7 +107,6 @@ int main()
 
 		do {
 			struct input_event ev;
-			const char *s_ev_type, *s_ev_code;
 
 			/**
 			 * libevdev_next_event() returns:
@@ -120,10 +119,11 @@ int main()
 			rc = libevdev_next_event(evdev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 			switch (rc) {
 				case LIBEVDEV_READ_STATUS_SUCCESS:
-					s_ev_type = libevdev_event_type_get_name(ev.type);
-					s_ev_code = libevdev_event_code_get_name(ev.type, ev.code);
-					printf("Event: %s %s %d\n", s_ev_type, s_ev_code, ev.value);
-					event_complete = (ev.code == SYN_REPORT) ? true : false;
+					printf("Event: %s %s %d\n",
+						libevdev_event_type_get_name(ev.type),
+						libevdev_event_code_get_name(ev.type, ev.code),
+						ev.value);
+					event_complete = false;
 					break;
 				case LIBEVDEV_READ_STATUS_SYNC:
 					fprintf(stderr, "Dropped an event, resync required!\n");
@@ -139,7 +139,43 @@ int main()
 					continue;
 			}
 
-			// TODO: update the status structure
+			// update nun_status
+			if (ev.type == EV_KEY) {
+				/**
+				 * Event to nun_stat mapping:
+				 * 0 <-> BUT_UP
+				 * 1 <-> BUT_DOWN
+				 * no event <-> BUT_KEEP
+				 */
+				switch (ev.code) {
+					case BTN_C:
+						nun_status.but_c = ev.value;
+						break;
+					case BTN_Z:
+						nun_status.but_z = ev.value;
+						break;
+					default:
+						fprintf(stderr, "Unexpected event code! (%d)\n", ev.code);
+						break;
+				}
+			} else if (ev.type == EV_ABS) {
+				switch (ev.code) {
+					case ABS_X:
+						nun_status.joy_x = ev.value;
+						break;
+					case ABS_Y:
+						nun_status.joy_y = ev.value;
+						break;
+					default:
+						fprintf(stderr, "Unexpected event code! (%d)\n", ev.code);
+						break;
+				}
+			} else if (ev.type == EV_SYN && ev.code == SYN_REPORT) {
+				// indicates that input_sync() was called in the kernel, i.e. event group is complete
+				event_complete = true;
+			} else {
+				fprintf(stderr, "Unexpected event type! (%d)\n", ev.type);
+			}
 
 		} while (!event_complete && keep_running);
 
