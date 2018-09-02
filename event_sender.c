@@ -102,8 +102,8 @@ int main()
 		// Event group separation
 		printf("--------------- EVENT ---------------\n");
 
-		// init status struct
-		nun_stat_t nun_status = {NO_CHANGE, NO_CHANGE, NO_CHANGE, NO_CHANGE};
+		// init status struct with neutral values
+		nun_stat_t nun_status = {JOY_NO_CHANGE, JOY_NO_CHANGE, BUT_KEEP, BUT_KEEP};
 
 		do {
 			struct input_event ev;

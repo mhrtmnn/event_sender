@@ -7,9 +7,9 @@
 /*******************************************************************************
 * MACROS/DEFINES
 *******************************************************************************/
-#define NO_CHANGE -1
+#define JOY_NO_CHANGE -1
 typedef enum _but_state_t{
-	BUT_UP,
+	BUT_UP = 0,
 	BUT_DOWN,
 	BUT_KEEP
 } but_state_t;
@@ -21,8 +21,8 @@ typedef struct
 {
 	int joy_x;
 	int joy_y;
-	int but_c;
-	int but_z;
+	but_state_t but_c;
+	but_state_t but_z;
 } nun_stat_t;
 
 
