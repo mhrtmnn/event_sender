@@ -192,4 +192,5 @@ int main()
 	free_nunchuk_protobuf(nun_protobuf);
 	libevdev_free(evdev);
 	close(fd);
+	return EXIT_SUCCESS;
 }
