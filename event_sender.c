@@ -46,7 +46,7 @@ int unpack_buffer(uint8_t *buffer, unsigned length)
 
 	int err = unpack_nunchuk_protobuf(buffer, length, &nun_stat);
 	if (err) {
-		printf("Error unpacking protobuf!");
+		fprintf(stderr, "Error unpacking protobuf!");
 		return err;
 	}
 
