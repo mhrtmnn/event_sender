@@ -141,7 +141,8 @@ int pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t **buf, unsigned *buflen)
 	*buflen = len;
 	*buf = g_proto_pack_buff;
 
-	printf("Packing probuf, size %d\n", len);
+	/* dbg */
+	// printf("Packing probuf, size %d\n", len);
 
 	return __pack_nunchuk_protobuf(msg, g_proto_pack_buff, len);
 }

@@ -67,7 +67,8 @@ int send_update(NunchukUpdate *nun_protobuf)
 			return err;
 		}
 
-		/* debug */ unpack_buffer(buffer, length);
+		/* debug */
+		// unpack_buffer(buffer, length);
 
 		// send out buf
 		return nw_send(buffer, length);
@@ -77,6 +78,7 @@ int send_update(NunchukUpdate *nun_protobuf)
 /***********************************************************************************************************************
 * MAIN
 ***********************************************************************************************************************/
+#define PRINT_EV 0
 int main()
 {
 	bool event_complete;
@@ -132,7 +134,7 @@ int main()
 	// main loop
 	while (keep_running) {
 		// Event group separation
-		printf("--------------- EVENT ---------------\n");
+		if (PRINT_EV) printf("--------------- EVENT ---------------\n");
 
 		// init status struct with neutral values
 		nun_stat_t nun_status = {JOY_NO_CHANGE, JOY_NO_CHANGE, BUT_KEEP, BUT_KEEP};
@@ -151,7 +153,7 @@ int main()
 			rc = libevdev_next_event(evdev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 			switch (rc) {
 				case LIBEVDEV_READ_STATUS_SUCCESS:
-					printf("Event: %s %s %d\n",
+					if (PRINT_EV) printf("Event: %s %s %d\n",
 						libevdev_event_type_get_name(ev.type),
 						libevdev_event_code_get_name(ev.type, ev.code),
 						ev.value);
@@ -212,7 +214,7 @@ int main()
 		} while (!event_complete && keep_running);
 
 		// Event group separation
-		printf("\n");
+		if (PRINT_EV) printf("\n");
 
 		// send out the protobuf with the complete event
 		fill_nunchuk_protobuf(&nun_status, nun_protobuf);
