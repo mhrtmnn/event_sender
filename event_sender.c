@@ -93,6 +93,12 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
+	rc = init_nw();
+	if (rc) {
+		fprintf(stderr, "Error initializing the network subsystem!\n");
+		exit(EXIT_FAILURE);
+	}
+
 	// signalling for interrupting main loop
 	signal(SIGINT, intHandler);
 
@@ -223,6 +229,7 @@ int main()
 
 	// cleanup
 	printf("Graceful exit.\n");
+	teardown_nw();
 	free_nunchuk_protobuf(nun_protobuf);
 	libevdev_free(evdev);
 	close(fd);
