@@ -5,9 +5,9 @@ COMPILER := arm-buildroot-linux-uclibcgnueabihf-gcc-7.3.0
 
 # Project specific
 PROG := event_sender
-SRC_LIST := $(PROG).c protobuf_handling.c network_handling.c
+SRC_LIST := $(PROG).c protobuf_handling.c network_handling.c avahi_handling.c
 PROTO_NAME := nunchuk_update
-LIB_LIST := libevdev libprotobuf-c
+LIB_LIST := libevdev libprotobuf-c avahi-core
 CFLAGS := -Wall -g
 
 

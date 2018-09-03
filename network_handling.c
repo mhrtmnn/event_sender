@@ -4,6 +4,7 @@
 #include <unistd.h> /* close */
 
 #include "network_handling.h"
+#include "avahi_handling.h"
 
 /***********************************************************************************************************************
 * GLOBAL DATA
@@ -28,6 +29,9 @@ static int get_port()
 
 static int get_ip(char *dst)
 {
+	// use avahi to find server ip addr
+	main_ava();
+
 	strcpy(dst, IP_TP);
 
 	return 0;
