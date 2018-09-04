@@ -158,10 +158,10 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
     int error;
     int ret = -1;
 
-    /* Initialize the psuedo-RNG */
+    // Initialize the psuedo-RNG
     srand(time(NULL));
 
-    /* Allocate main loop object */
+    // Allocate main loop object
     if (!(simple_poll = avahi_simple_poll_new())) {
         fprintf(stderr, "Failed to create simple poll object.\n");
         goto fail;
@@ -169,13 +169,13 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
 
     avahi_server_config_init(&config);
 
-    /* Do not publish any local records */
+    // Do not publish any local records
     config.publish_hinfo = 0;
     config.publish_addresses = 0;
     config.publish_workstation = 0;
     config.publish_domain = 0;
 
-	/* ipv4 only */
+	// ipv4 only
 	config.use_ipv6 = 0;
 
     /* Set a unicast DNS server (wide_area_servers field) for wide area DNS-SD */
@@ -186,16 +186,16 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
     /* Allocate a new server */
     server = avahi_server_new(avahi_simple_poll_get(simple_poll), &config, NULL, NULL, &error);
 
-    /* Free the configuration data */
+    // Free the configuration data
     avahi_server_config_free(&config);
 
-    /* Check wether creating the server object succeeded */
+    // Check wether creating the server object succeeded
     if (!server) {
         fprintf(stderr, "Failed to create server: %s\n", avahi_strerror(error));
         goto fail;
     }
 
-    /* Create the service browser */
+    // Create the service browser
     if (!(sb = avahi_s_service_browser_new(server, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_http._tcp", NULL, 0, browse_callback, server))) {
         fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_server_errno(server)));
         goto fail;
@@ -219,7 +219,7 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
     ret = 0;
 
 fail:
-    /* Cleanup things */
+    // Cleanup things
     if (sb)
         avahi_s_service_browser_free(sb);
 
