@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <assert.h>
-#include <stdlib.h>
-#include <time.h>
+#include <stdbool.h>
+#include <stdlib.h> /* srand */
+#include <time.h> /* time */
+#include <string.h> /* strncpy */
 
 #include <avahi-core/core.h>
 #include <avahi-core/lookup.h>
@@ -16,10 +18,23 @@
  */
 
 /***********************************************************************************************************************
+* MACROS
+***********************************************************************************************************************/
+#define PRINT_RES 0
+#define TARGET_SRV_NAME "ReneSrvr" //TODO: own server
+#define IP_ADDR_LEN 16
+
+
+/***********************************************************************************************************************
 * GLOBAL DATA
 ***********************************************************************************************************************/
 static AvahiServer *server = NULL;
 static AvahiSimplePoll *simple_poll = NULL;
+static volatile bool service_found = false;
+
+// target address
+unsigned *g_target_port;
+char **g_target_ip;
 
 
 /***********************************************************************************************************************
@@ -46,11 +61,12 @@ static void resolve_callback(AvahiSServiceResolver *r,
 	if (event == AVAHI_RESOLVER_FOUND) {
 		char a[AVAHI_ADDRESS_STR_MAX], *t;
 
-		fprintf(stdout, "(Resolver) Service '%s' of type '%s' in domain '%s':\n", name, type, domain);
+		if (PRINT_RES) fprintf(stdout, "(Resolver) Service '%s' of type '%s' in domain '%s':\n", name, type, domain);
 
 		avahi_address_snprint(a, sizeof(a), address);
 		t = avahi_string_list_to_string(txt);
-		fprintf(stdout,
+
+		if (PRINT_RES) fprintf(stdout,
 			"\t%s:%u (%s)\n"
 			"\tTXT=%s\n"
 			"\tcookie is %u\n"
@@ -65,6 +81,18 @@ static void resolve_callback(AvahiSServiceResolver *r,
 			!!(flags & AVAHI_LOOKUP_RESULT_WIDE_AREA),
 			!!(flags & AVAHI_LOOKUP_RESULT_MULTICAST),
 			!!(flags & AVAHI_LOOKUP_RESULT_CACHED));
+
+		// check if the found service is the one we are looking for
+		if (!strcmp(name, TARGET_SRV_NAME)) {
+			if (PRINT_RES) printf("(Resolver) Found '%s' Service!\n", name);
+
+			// save address data
+			strncpy(*g_target_ip, a, IP_ADDR_LEN);
+			*g_target_port = port;
+
+			// indicate that search is over
+			service_found = true;
+		}
 
 		avahi_free(t);
 	} else {
@@ -94,8 +122,9 @@ static void browse_callback(AvahiSServiceBrowser *b,
             fprintf(stderr, "(Browser) %s\n", avahi_strerror(avahi_server_errno(server)));
             avahi_simple_poll_quit(simple_poll);
             return;
+
         case AVAHI_BROWSER_NEW:
-            fprintf(stderr, "(Browser) NEW: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
+            if (PRINT_RES) fprintf(stderr, "(Browser) NEW: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
 
             /**
 			 * We ignore the returned resolver object. In the callback
@@ -107,12 +136,14 @@ static void browse_callback(AvahiSServiceBrowser *b,
                 fprintf(stderr, "Failed to resolve service '%s': %s\n", name, avahi_strerror(avahi_server_errno(s)));
 
             break;
+
         case AVAHI_BROWSER_REMOVE:
-            fprintf(stderr, "(Browser) REMOVE: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
+            if (PRINT_RES) fprintf(stderr, "(Browser) REMOVE: service '%s' of type '%s' in domain '%s'\n", name, type, domain);
             break;
+
         case AVAHI_BROWSER_ALL_FOR_NOW:
         case AVAHI_BROWSER_CACHE_EXHAUSTED:
-            fprintf(stderr, "(Browser) %s\n", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
+            if (PRINT_RES) fprintf(stderr, "(Browser) %s\n", event == AVAHI_BROWSER_CACHE_EXHAUSTED ? "CACHE_EXHAUSTED" : "ALL_FOR_NOW");
             break;
     }
 }
@@ -121,11 +152,11 @@ static void browse_callback(AvahiSServiceBrowser *b,
 /***********************************************************************************************************************
 * IMPLEMENTATION OF EXPORTED FUNCTIONS
 ***********************************************************************************************************************/
-int main_ava() {
+int avahi_find_host_addr(char **ip, unsigned *port) {
     AvahiServerConfig config;
     AvahiSServiceBrowser *sb = NULL;
     int error;
-    int ret = 1;
+    int ret = -1;
 
     /* Initialize the psuedo-RNG */
     srand(time(NULL));
@@ -136,12 +167,16 @@ int main_ava() {
         goto fail;
     }
 
-    /* Do not publish any local records */
     avahi_server_config_init(&config);
+
+    /* Do not publish any local records */
     config.publish_hinfo = 0;
     config.publish_addresses = 0;
     config.publish_workstation = 0;
     config.publish_domain = 0;
+
+	/* ipv4 only */
+	config.use_ipv6 = 0;
 
     /* Set a unicast DNS server (wide_area_servers field) for wide area DNS-SD */
     // avahi_address_parse("192.168.50.1", AVAHI_PROTO_UNSPEC, &config.wide_area_servers[0]);
@@ -166,8 +201,19 @@ int main_ava() {
         goto fail;
     }
 
-    /* Run the main loop */
-    avahi_simple_poll_loop(simple_poll);
+	// global data structures that can be manipulated by the callback
+	g_target_ip = ip;
+	g_target_port = port;
+
+    /**
+	 * Run one iteration of the main loop.
+	 * If sleep_time is < 0 this will block until any of the registered events happens,
+	 * then it will execute the attached callback function.
+	 *
+	 * returns (-1) on error and 0 on success
+	 */
+	while ((ret = avahi_simple_poll_iterate(simple_poll, -1)) == 0 && !service_found)
+	{ /* empty */ }
 
     ret = 0;
 

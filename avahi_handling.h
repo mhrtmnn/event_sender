@@ -6,10 +6,10 @@
 *******************************************************************************/
 
 /**
- * Avahi provided example code
+ * Use Avahi to find ip addr and port of a service
  *
- * return
+ * return: 0 on success, <0 on error
  */
-int main_ava();
+int avahi_find_host_addr(char **, unsigned *);
 
 #endif /* _avahi_handling */
