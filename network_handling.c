@@ -106,7 +106,5 @@ int nw_send(uint8_t *buffer, unsigned buf_len)
 		return -1;
 	}
 
-	fprintf(stderr, "Sent!\n");
-
 	return 0;
 }
