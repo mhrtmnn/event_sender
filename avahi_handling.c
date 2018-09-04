@@ -22,6 +22,7 @@
 ***********************************************************************************************************************/
 #define PRINT_RES 0
 #define IP_ADDR_LEN 16
+#define SEARCH_TO_SEC 5
 
 
 /***********************************************************************************************************************
@@ -153,10 +154,10 @@ static void browse_callback(AvahiSServiceBrowser *b,
 * IMPLEMENTATION OF EXPORTED FUNCTIONS
 ***********************************************************************************************************************/
 int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
+    int error, ret = -1;
+	clock_t endwait;
     AvahiServerConfig config;
     AvahiSServiceBrowser *sb = NULL;
-    int error;
-    int ret = -1;
 
     // Initialize the psuedo-RNG
     srand(time(NULL));
@@ -207,14 +208,25 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
 	g_target_service_name = srvc_name;
 
     /**
-	 * Run one iteration of the main loop.
-	 * If sleep_time is < 0 this will block until any of the registered events happens,
-	 * then it will execute the attached callback function.
+	 * Main Service Resolution Loop
 	 *
-	 * returns (-1) on error and 0 on success
+	 * Run one iteration of the main loop, it returns (-1) on error and 0 on success.
+	 * Sleep at most 500ms during one poll iteration.
+	 * Search is aborted if it takes longer than SEARCH_TO_SEC.
 	 */
-	while ((ret = avahi_simple_poll_iterate(simple_poll, -1)) == 0 && !service_found)
-	{ /* empty */ }
+    endwait = time(NULL) + SEARCH_TO_SEC ;
+	while (!service_found) {
+		ret = avahi_simple_poll_iterate(simple_poll, 500);
+		if (ret < 0)
+			goto fail;
+
+		// check if we timed out
+		if (time(NULL) > endwait) {
+			fprintf(stderr, "Search for Service timed out!\n");
+			ret = -1;
+			goto fail;
+		}
+	}
 
     ret = 0;
 
