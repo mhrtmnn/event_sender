@@ -179,12 +179,7 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
 	// ipv4 only
 	config.use_ipv6 = 0;
 
-    /* Set a unicast DNS server (wide_area_servers field) for wide area DNS-SD */
-    // avahi_address_parse("192.168.50.1", AVAHI_PROTO_UNSPEC, &config.wide_area_servers[0]);
-    // config.n_wide_area_servers = 1;
-    // config.enable_wide_area = 1;
-
-    /* Allocate a new server */
+    // Allocate a new server
     server = avahi_server_new(avahi_simple_poll_get(simple_poll), &config, NULL, NULL, &error);
 
     // Free the configuration data
