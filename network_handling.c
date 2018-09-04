@@ -1,10 +1,11 @@
-#include<arpa/inet.h>
-#include<stdio.h> /* fprintf */
-#include<string.h> /* strerror */
+#include <arpa/inet.h>
+#include <stdio.h> /* fprintf */
+#include <string.h> /* strerror */
 #include <unistd.h> /* close */
 
 #include "network_handling.h"
 #include "avahi_handling.h"
+
 
 /***********************************************************************************************************************
 * GLOBAL DATA
@@ -12,9 +13,11 @@
 int g_sock = 0;
 struct sockaddr_in g_si_other = {0};
 
+
 /***********************************************************************************************************************
 * MACROS/DEFINES
 ***********************************************************************************************************************/
+#define CFG_USE_AVAHI 1
 #define IP_TP "10.10.0.102"
 #define PORT_TP 8888
 
@@ -22,19 +25,17 @@ struct sockaddr_in g_si_other = {0};
 /***********************************************************************************************************************
 * HELPER FUNC
 ***********************************************************************************************************************/
-static int get_port()
+static int get_address(char **ip, unsigned *port)
 {
-	return PORT_TP;
-}
-
-static int get_ip(char *dst)
-{
+#if CFG_USE_AVAHI
 	// use avahi to find server ip addr
-	main_ava();
-
-	strcpy(dst, IP_TP);
-
+	return avahi_find_host_addr(ip, port);
+#else
+	// use a static cfg
+	*ip = IP_TP;
+	*port = PORT_TP;
 	return 0;
+#endif
 }
 
 
@@ -44,7 +45,8 @@ static int get_ip(char *dst)
 int init_nw()
 {
 	int err;
-	char dst_ip[15];
+	char *dst_ip;
+	unsigned dst_port;
 	struct sockaddr_in si_other = {0};
 
 	// sanity check
@@ -60,16 +62,19 @@ int init_nw()
 		return -1;
     }
 
-	// setup dst address
-	si_other.sin_family = AF_INET;
-    si_other.sin_port = htons(get_port());
-
 	// retrieve the dst ip addr
-	err = get_ip(dst_ip);
+	err = get_address(&dst_ip, &dst_port);
 	if (err < 0) {
-        fprintf(stderr, "Could not retrieve destination IP\n");
+        fprintf(stderr, "Could not retrieve destination address\n");
 		return -1;
     }
+
+	// dbg
+	printf("Found requested service on %s:%u!\n", dst_ip, dst_port);
+
+	// setup dst address
+	si_other.sin_family = AF_INET;
+    si_other.sin_port = htons(dst_port);
 
 	// convert string into binary addr representation, returns 0 on error
     err = inet_aton(dst_ip, &si_other.sin_addr);
