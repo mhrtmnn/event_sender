@@ -2,22 +2,29 @@
 
 This application receives input events from a Wii Nunchuk and sends them over the network
 to another computer.
+
 It is part of the _BeagleBone Black_ [buildroot project].
 
 ## Dependencies
 
 - [libevdev]
-	> Used to receive input events from the [evdev] kernel subsystem
+
+> Used to receive input events from the [evdev] kernel subsystem
+
 - [protobuf] and C language support plugin [protobuf-c]
-	> Used to pack event data into a platform independent transfer format.
+
+> Used to pack event data into a platform independent transfer format.
+
 - [Avahi]
-	> Used to find the IP Address and Port of the event receiving network partner
+
+> Used to find the IP Address and Port of the event receiving network partner
 
 _All dependencies are included in the [buildroot] project and can be configured via its [.config] file_
 
 
 ## Underlying Kernel Driver
 The Application is supposed to be used in combination with the [i2c nunchuk kernel driver],
+
 which exports input events of the buttons (**Button C** and **Button Z**) and Joystick-Axis
 (**Joystick X** and **Joystick Y**) via a char device (e.g. `/dev/input/event0`) to user space.
 
