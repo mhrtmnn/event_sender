@@ -7,11 +7,11 @@
 *******************************************************************************/
 
 /**
- * Use Avahi to find ip addr and port of a service
+ * Use Avahi to find ip addr and port for a given service name
  *
  * return: 0 on success, <0 on error
  */
-int avahi_find_host_addr(char **, unsigned *);
+int avahi_find_host_addr(char*, char **, unsigned *);
 
 
 #endif /* _avahi_handling */

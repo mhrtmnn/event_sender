@@ -21,7 +21,6 @@
 * MACROS
 ***********************************************************************************************************************/
 #define PRINT_RES 0
-#define TARGET_SRV_NAME "ReneSrvr" //TODO: own server
 #define IP_ADDR_LEN 16
 
 
@@ -32,9 +31,10 @@ static AvahiServer *server = NULL;
 static AvahiSimplePoll *simple_poll = NULL;
 static volatile bool service_found = false;
 
-// target address
+// target data
 unsigned *g_target_port;
 char **g_target_ip;
+char *g_target_service_name;
 
 
 /***********************************************************************************************************************
@@ -83,7 +83,7 @@ static void resolve_callback(AvahiSServiceResolver *r,
 			!!(flags & AVAHI_LOOKUP_RESULT_CACHED));
 
 		// check if the found service is the one we are looking for
-		if (!strcmp(name, TARGET_SRV_NAME)) {
+		if (!strcmp(name, g_target_service_name)) {
 			if (PRINT_RES) printf("(Resolver) Found '%s' Service!\n", name);
 
 			// save address data
@@ -152,7 +152,7 @@ static void browse_callback(AvahiSServiceBrowser *b,
 /***********************************************************************************************************************
 * IMPLEMENTATION OF EXPORTED FUNCTIONS
 ***********************************************************************************************************************/
-int avahi_find_host_addr(char **ip, unsigned *port) {
+int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
     AvahiServerConfig config;
     AvahiSServiceBrowser *sb = NULL;
     int error;
@@ -204,6 +204,7 @@ int avahi_find_host_addr(char **ip, unsigned *port) {
 	// global data structures that can be manipulated by the callback
 	g_target_ip = ip;
 	g_target_port = port;
+	g_target_service_name = srvc_name;
 
     /**
 	 * Run one iteration of the main loop.

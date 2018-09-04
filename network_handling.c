@@ -18,6 +18,7 @@ struct sockaddr_in g_si_other = {0};
 * MACROS/DEFINES
 ***********************************************************************************************************************/
 #define CFG_USE_AVAHI 1
+#define AVAHI_SERVC_NAME "ReneSrvr" //TODO: own server
 #define IP_TP "10.10.0.102"
 #define PORT_TP 8888
 
@@ -29,7 +30,7 @@ static int get_address(char **ip, unsigned *port)
 {
 #if CFG_USE_AVAHI
 	// use avahi to find server ip addr
-	return avahi_find_host_addr(ip, port);
+	return avahi_find_host_addr(AVAHI_SERVC_NAME, ip, port);
 #else
 	// use a static cfg
 	*ip = IP_TP;
