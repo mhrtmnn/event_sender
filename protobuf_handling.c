@@ -6,6 +6,11 @@
 #include "event_sender.h"
 #include "protobuf_handling.h"
 
+
+/***********************************************************************************************************************
+* GLOBAL DATA
+***********************************************************************************************************************/
+
 // global buffer used to pack protobuf into
 uint8_t g_proto_pack_buff[MAX_UNPACK_BUF_SIZE];
 
@@ -15,6 +20,42 @@ uint8_t g_proto_pack_buff[MAX_UNPACK_BUF_SIZE];
 	// Maybe make unpack buffers associated to a given protobuf.
 
 
+/***********************************************************************************************************************
+* HELPER FUNC
+***********************************************************************************************************************/
+
+/**
+ * Pack a given nunchuk_update protobuf into a pre-allocated buffer.
+ * The size of the buffer is verified.
+ *
+ * return: 0 on success, <0 on error
+ */
+static int __pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t *buf, unsigned buf_len)
+{
+	int rc;
+	unsigned len; // Length of serialized data
+
+	// check length of provided buffer before serializing the protobuf
+	len = nunchuk_update__get_packed_size(msg);
+	if (buf_len != len) {
+		fprintf(stderr, "Buffer has wrong length (is %d, should be %d)!\n", buf_len, len);
+		return -EINVAL;
+	}
+
+	// serialize the protobuf
+	rc = nunchuk_update__pack(msg, buf);
+	if (rc != len) {
+		fprintf(stderr, "Failed to pack protobuf\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+
+/***********************************************************************************************************************
+* IMPLEMENTATION OF EXPORTED FUNCTIONS
+***********************************************************************************************************************/
 NunchukUpdate *new_nunchuk_protobuf(void)
 {
 	NunchukUpdate			*nun_update;// Main msg
@@ -102,34 +143,6 @@ void fill_stats_from_nunchuk_protobuf(NunchukUpdate *msg, nun_stat_t *stat)
 }
 
 /**
- * Pack a given nunchuk_update protobuf into a pre-allocated buffer.
- * The size of the buffer is verified.
- *
- * return: 0 on success, <0 on error
- */
-static int __pack_nunchuk_protobuf(NunchukUpdate *msg, uint8_t *buf, unsigned buf_len)
-{
-	int rc;
-	unsigned len; // Length of serialized data
-
-	// check length of provided buffer before serializing the protobuf
-	len = nunchuk_update__get_packed_size(msg);
-	if (buf_len != len) {
-		fprintf(stderr, "Buffer has wrong length (is %d, should be %d)!\n", buf_len, len);
-		return -EINVAL;
-	}
-
-	// serialize the protobuf
-	rc = nunchuk_update__pack(msg, buf);
-	if (rc != len) {
-		fprintf(stderr, "Failed to pack protobuf\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-/**
  * wrapper for __pack_nunchuk_protobuf, uses a global unpack buffer that is returned.
  * By this, the user does not need to determine the size of the buffer and preallocate it himself.
  */
@@ -164,4 +177,3 @@ int unpack_nunchuk_protobuf(uint8_t *buf, unsigned len, nun_stat_t *stat)
 
 	return 0;
 }
-
