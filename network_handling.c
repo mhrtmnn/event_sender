@@ -18,7 +18,7 @@ struct sockaddr_in g_si_other = {0};
 * MACROS/DEFINES
 ***********************************************************************************************************************/
 #define CFG_USE_AVAHI 1
-#define AVAHI_SERVC_NAME "ReneSrvr" //TODO: own server
+#define AVAHI_SERVC_NAME "EventSender_Zeroconf"
 #define IP_TP "10.10.0.102"
 #define PORT_TP 8888
 
