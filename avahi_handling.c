@@ -192,7 +192,7 @@ int avahi_find_host_addr(char *srvc_name, char **ip, unsigned *port) {
     }
 
     // Create the service browser
-    if (!(sb = avahi_s_service_browser_new(server, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_http._tcp", NULL, 0, browse_callback, server))) {
+    if (!(sb = avahi_s_service_browser_new(server, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_protobuf._udp", NULL, 0, browse_callback, server))) {
         fprintf(stderr, "Failed to create service browser: %s\n", avahi_strerror(avahi_server_errno(server)));
         goto fail;
     }
