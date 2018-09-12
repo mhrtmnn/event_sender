@@ -8,16 +8,13 @@ It is part of the _BeagleBone Black_ [buildroot project].
 ## Dependencies
 
 - [libevdev]
-
-> Used to receive input events from the [evdev] kernel subsystem
+    > Used to receive input events from the [evdev] kernel subsystem
 
 - [protobuf] and C language support plugin [protobuf-c]
-
-> Used to pack event data into a platform independent transfer format.
+    > Used to pack event data into a platform independent transfer format.
 
 - [Avahi]
-
-> Used to find the IP Address and Port of the event receiving network partner
+    > Used to find the IP Address and Port of the event receiving network partner
 
 _All dependencies are included in the [buildroot] project and can be configured via its [.config] file_
 
@@ -31,9 +28,7 @@ which exports input events of the buttons (**Button C** and **Button Z**) and Jo
 ## Functionality
 Button events `EV_KEY` (Codes `BTN_C` and `BTN_Z`) and Joystick Events `EV_ABS`
 (`ABS_X` and `ABS_Y`) are read by _libevdev_'s `libevdev_next_event()` function.
-
 Events are packed into a _protobuf_, that describes the Nunchuk's current state ([`nunchuk_update.proto`]).
-
 The _protobuf_ is then send via _UDP_ to a network partner.
 IP and Port of the receiving service are determined by _avahi_.
 
