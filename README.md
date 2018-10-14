@@ -3,7 +3,7 @@
 This application receives input events from a Wii Nunchuk and sends them over the network
 to another computer.
 
-It is part of the _BeagleBone Black_ [buildroot project].
+It is part of my experimental _BeagleBone Black_ [buildroot project].
 
 ## Dependencies
 
